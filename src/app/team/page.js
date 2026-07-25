@@ -1,5 +1,5 @@
-import Layout from '../../pages/Layout';
-import Team from '../../pages/Team';
+import Layout from '../../views/Layout';
+import Team from '../../views/Team';
 
 export default function TeamPage() {
   return (

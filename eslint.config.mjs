@@ -10,6 +10,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // This is an unreferenced pre-migration copy; the active application lives in src/app, src/pages, and src/components.
+    "src/project-management/**",
   ]),
 ]);
 

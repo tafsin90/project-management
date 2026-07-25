@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
+import { api } from "../lib/api";
+import { upsertWorkspace } from "../features/workspaceSlice";
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const dispatch = useDispatch();
     const project = currentWorkspace?.projects.find((p) => p.id === projectId);
     const teamMembers = project?.members || [];
 
@@ -21,8 +25,15 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-
+        setIsSubmitting(true);
+        try {
+            const workspace = await api.createTask(currentWorkspace.id, projectId, formData);
+            dispatch(upsertWorkspace(workspace));
+            toast.success("Task created");
+            setShowCreateTask(false);
+            setFormData({ title: "", description: "", type: "TASK", status: "TODO", priority: "MEDIUM", assigneeId: "", due_date: "" });
+        } catch (error) { toast.error(error.message); }
+        finally { setIsSubmitting(false); }
     };
 
     return showCreateTask ? (

@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { XIcon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { api } from "../lib/api";
+import { upsertWorkspace } from "../features/workspaceSlice";
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const { currentWorkspace } = useSelector((state) => state.workspace);
+    const dispatch = useDispatch();
 
     const [formData, setFormData] = useState({
         name: "",
@@ -24,7 +28,18 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        setIsSubmitting(true);
+        try {
+            const workspace = await api.createProject(currentWorkspace.id, {
+                ...formData,
+                memberIds: currentWorkspace.members.filter((member) => formData.team_members.includes(member.user.email)).map((member) => member.user.id),
+            });
+            dispatch(upsertWorkspace(workspace));
+            toast.success("Project created");
+            setIsDialogOpen(false);
+            setFormData({ name: "", description: "", status: "PLANNING", priority: "MEDIUM", start_date: "", end_date: "", team_members: [], team_lead: "", progress: 0 });
+        } catch (error) { toast.error(error.message); }
+        finally { setIsSubmitting(false); }
     };
 
     const removeTeamMember = (email) => {
@@ -120,9 +135,9 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         >
                             <option value="">Add team members</option>
                             {currentWorkspace?.members
-                                ?.filter((email) => !formData.team_members.includes(email))
+                                ?.filter((member) => !formData.team_members.includes(member.user.email))
                                 .map((member) => (
-                                    <option key={member.user.email} value={member.email}>
+                                    <option key={member.user.email} value={member.user.email}>
                                         {member.user.email}
                                     </option>
                                 ))}

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { SearchIcon, PanelLeft } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
@@ -43,7 +44,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                     </button>
 
                     {/* User Button */}
-                    <img src={assets.profile_img_a} alt="User Avatar" className="size-7 rounded-full" />
+                    <Image src={assets.profile_img_a} alt="User Avatar" width={28} height={28} className="size-7 rounded-full" />
                 </div>
             </div>
         </div>

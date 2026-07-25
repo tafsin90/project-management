@@ -1,5 +1,5 @@
-import Layout from '../../pages/Layout';
-import Projects from '../../pages/Projects';
+import Layout from '../../views/Layout';
+import Projects from '../../views/Projects';
 
 export default function ProjectsPage() {
   return (

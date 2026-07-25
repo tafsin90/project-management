@@ -6,15 +6,16 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronRightIcon, SettingsIcon, KanbanIcon, ChartColumnIcon, CalendarIcon, ArrowRightIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
+const EMPTY_PROJECTS = [];
+
 const ProjectSidebar = () => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
     const [expandedProjects, setExpandedProjects] = useState(new Set());
 
-    const projects = useSelector(
-        (state) => state?.workspace?.currentWorkspace?.projects || []
-    );
+    const currentWorkspace = useSelector((state) => state.workspace.currentWorkspace);
+    const projects = currentWorkspace?.projects || EMPTY_PROJECTS;
 
     const getProjectSubItems = (projectId) => [
         { title: 'Tasks', icon: KanbanIcon, url: `/projects/${projectId}?tab=tasks` },

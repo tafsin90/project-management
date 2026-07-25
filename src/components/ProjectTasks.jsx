@@ -1,11 +1,14 @@
 'use client';
 
+import Image from "next/image";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { assets } from "../assets/assets";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { deleteTask, updateTask } from "../features/workspaceSlice";
+import { upsertWorkspace } from "../features/workspaceSlice";
+import { api } from "../lib/api";
 import { Bug, CalendarIcon, GitCommit, MessageSquare, Square, Trash, XIcon, Zap } from "lucide-react";
 
 const typeIcons = {
@@ -22,8 +25,9 @@ const priorityTexts = {
     HIGH: { background: "bg-emerald-100 dark:bg-emerald-950", prioritycolor: "text-emerald-600 dark:text-emerald-400" },
 };
 
-const ProjectTasks = ({ tasks }) => {
+const ProjectTasks = ({ tasks, projectId }) => {
     const dispatch = useDispatch();
+    const currentWorkspace = useSelector((state) => state.workspace.currentWorkspace);
     const router = useRouter();
     const [selectedTasks, setSelectedTasks] = useState([]);
 
@@ -58,16 +62,8 @@ const ProjectTasks = ({ tasks }) => {
 
     const handleStatusChange = async (taskId, newStatus) => {
         try {
-            toast.loading("Updating status...");
-
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            let updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
-            updatedTask.status = newStatus;
-            dispatch(updateTask(updatedTask));
-
-            toast.dismissAll();
+            const workspace = await api.updateTask(currentWorkspace.id, projectId, taskId, { status: newStatus });
+            dispatch(upsertWorkspace(workspace));
             toast.success("Task status updated successfully");
         } catch (error) {
             toast.dismissAll();
@@ -80,14 +76,10 @@ const ProjectTasks = ({ tasks }) => {
             const confirm = window.confirm("Are you sure you want to delete the selected tasks?");
             if (!confirm) return;
 
-            toast.loading("Deleting tasks...");
-
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            dispatch(deleteTask(selectedTasks));
-
-            toast.dismissAll();
+            let workspace;
+            for (const taskId of selectedTasks) workspace = await api.deleteTask(currentWorkspace.id, projectId, taskId);
+            if (workspace) dispatch(upsertWorkspace(workspace));
+            setSelectedTasks([]);
             toast.success("Tasks deleted successfully");
         } catch (error) {
             toast.dismissAll();
@@ -158,7 +150,7 @@ const ProjectTasks = ({ tasks }) => {
                             <thead className="text-xs uppercase dark:bg-zinc-800/70 text-zinc-500 dark:text-zinc-400 ">
                                 <tr>
                                     <th className="pl-2 pr-1">
-                                        <input onChange={() => selectedTasks.length > 1 ? setSelectedTasks([]) : setSelectedTasks(tasks.map((t) => t.id))} checked={selectedTasks.length === tasks.length} type="checkbox" className="size-3 accent-zinc-600 dark:accent-zinc-500" />
+                                        <input onChange={() => selectedTasks.length === tasks.length ? setSelectedTasks([]) : setSelectedTasks(tasks.map((t) => t.id))} checked={tasks.length > 0 && selectedTasks.length === tasks.length} type="checkbox" className="size-3 accent-zinc-600 dark:accent-zinc-500" />
                                     </th>
                                     <th className="px-4 pl-0 py-3">Title</th>
                                     <th className="px-4 py-3">Type</th>
@@ -200,7 +192,7 @@ const ProjectTasks = ({ tasks }) => {
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-2">
-                                                        <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
+                                                        <Image src={task.assignee?.image || assets.profile_img_a} className="size-5 rounded-full" alt="avatar" width={20} height={20} />
                                                         {task.assignee?.name || "-"}
                                                     </div>
                                                 </td>
@@ -259,7 +251,7 @@ const ProjectTasks = ({ tasks }) => {
                                         </div>
 
                                         <div className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                                            <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
+                                            <Image src={task.assignee?.image || assets.profile_img_a} className="size-5 rounded-full" alt="avatar" width={20} height={20} />
                                             {task.assignee?.name || "-"}
                                         </div>
 

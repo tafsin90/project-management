@@ -1,23 +1,16 @@
 'use client';
 
-import { useEffect, useState } from "react";
 import { ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
 import { useSelector } from "react-redux";
+import { getCurrentUserId } from "../lib/currentUser";
 
 export default function TasksSummary() {
 
     const { currentWorkspace } = useSelector((state) => state.workspace);
-    const user = { id: 'user_1' }
-    const [tasks, setTasks] = useState([]);
+    const tasks = currentWorkspace?.projects?.flatMap((project) => project.tasks || []) || [];
+    const currentUserId = getCurrentUserId(currentWorkspace);
 
-    // Get all tasks for all projects in current workspace
-    useEffect(() => {
-        if (currentWorkspace) {
-            setTasks(currentWorkspace.projects.flatMap((project) => project.tasks));
-        }
-    }, [currentWorkspace]);
-
-    const myTasks = tasks.filter(i => i.assigneeId === user.id);
+    const myTasks = tasks.filter(i => i.assigneeId === currentUserId);
     const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'DONE');
     const inProgressIssues = tasks.filter(i => i.status === 'IN_PROGRESS');
 

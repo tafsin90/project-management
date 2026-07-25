@@ -1,31 +1,32 @@
-import { format } from "date-fns";
 import { Plus, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AddProjectMember from "./AddProjectMember";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { api } from "../lib/api";
+import { upsertWorkspace } from "../features/workspaceSlice";
 
 export default function ProjectSettings({ project }) {
 
-    const [formData, setFormData] = useState({
-        name: "New Website Launch",
-        description: "Initial launch for new web platform.",
-        status: "PLANNING",
-        priority: "MEDIUM",
-        start_date: "2025-09-10",
-        end_date: "2025-10-15",
-        progress: 30,
-    });
+    const [formData, setFormData] = useState(project);
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const currentWorkspace = useSelector((state) => state.workspace.currentWorkspace);
+    const dispatch = useDispatch();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setIsSubmitting(true);
+        try {
+            const workspace = await api.updateProject(currentWorkspace.id, project.id, formData);
+            dispatch(upsertWorkspace(workspace));
+            toast.success("Project updated");
+        } catch (error) { toast.error(error.message); }
+        finally { setIsSubmitting(false); }
     };
 
-    useEffect(() => {
-        if (project) setFormData(project);
-    }, [project]);
+    const toDateInput = (value) => value ? new Date(value).toISOString().slice(0, 10) : "";
 
     const inputClasses = "w-full px-3 py-2 rounded mt-2 border text-sm dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-300";
 
@@ -78,11 +79,11 @@ export default function ProjectSettings({ project }) {
                     <div className="space-y-4 grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className={labelClasses}>Start Date</label>
-                            <input type="date" value={format(formData.start_date, "yyyy-MM-dd")} onChange={(e) => setFormData({ ...formData, start_date: new Date(e.target.value) })} className={inputClasses} />
+                            <input type="date" value={toDateInput(formData.start_date)} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} className={inputClasses} />
                         </div>
                         <div className="space-y-2">
                             <label className={labelClasses}>End Date</label>
-                            <input type="date" value={format(formData.end_date, "yyyy-MM-dd")} onChange={(e) => setFormData({ ...formData, end_date: new Date(e.target.value) })} className={inputClasses} />
+                            <input type="date" value={toDateInput(formData.end_date)} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} className={inputClasses} />
                         </div>
                     </div>
 
@@ -109,7 +110,7 @@ export default function ProjectSettings({ project }) {
                         <button type="button" onClick={() => setIsDialogOpen(true)} className="p-2 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800" >
                             <Plus className="size-4 text-zinc-900 dark:text-zinc-300" />
                         </button>
-                        <AddProjectMember isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
+                        <AddProjectMember project={project} isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
                     </div>
 
                     {/* Member List */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckSquareIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ function MyTasksSidebar() {
 
     const { currentWorkspace } = useSelector((state) => state.workspace);
     const [showMyTasks, setShowMyTasks] = useState(false);
-    const [myTasks, setMyTasks] = useState([]);
 
     const toggleMyTasks = () => setShowMyTasks(prev => !prev);
 
@@ -28,19 +27,7 @@ function MyTasksSidebar() {
         }
     };
 
-    const fetchUserTasks = () => {
-        const userId = user?.id || '';
-        if (!userId || !currentWorkspace) return;
-        const currentWorkspaceTasks = currentWorkspace.projects.flatMap((project) => {
-            return project.tasks.filter((task) => task?.assignee?.id === userId);
-        });
-
-        setMyTasks(currentWorkspaceTasks);
-    }
-
-    useEffect(() => {
-        fetchUserTasks()
-    }, [currentWorkspace])
+    const myTasks = currentWorkspace?.projects?.flatMap((project) => project.tasks.filter((task) => task?.assignee?.id === user.id)) || [];
 
     return (
         <div className="mt-6 px-3">

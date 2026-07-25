@@ -1,10 +1,11 @@
-import Layout from '../../../../pages/Layout';
-import TaskDetails from '../../../../pages/TaskDetails';
+import Layout from '../../../../views/Layout';
+import TaskDetails from '../../../../views/TaskDetails';
 
-export default function TaskDetailsPage({ params }) {
+export default async function TaskDetailsPage({ params }) {
+  const { projectId, taskId } = await params;
   return (
     <Layout>
-      <TaskDetails projectId={params.projectId} taskId={params.taskId} />
+      <TaskDetails projectId={projectId} taskId={taskId} />
     </Layout>
   );
 }

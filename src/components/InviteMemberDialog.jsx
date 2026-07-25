@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { Mail, UserPlus } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { api } from "../lib/api";
+import { upsertWorkspace } from "../features/workspaceSlice";
 
 const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const dispatch = useDispatch();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -15,7 +19,15 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setIsSubmitting(true);
+        try {
+            const workspace = await api.inviteMember(currentWorkspace.id, formData);
+            dispatch(upsertWorkspace(workspace));
+            toast.success("Member added");
+            setIsDialogOpen(false);
+            setFormData({ email: "", role: "org:member" });
+        } catch (error) { toast.error(error.message); }
+        finally { setIsSubmitting(false); }
     };
 
     if (!isDialogOpen) return null;
